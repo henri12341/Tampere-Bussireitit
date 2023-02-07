@@ -14,10 +14,13 @@
         <div id="map"></div>
         <p>Linjan tiedot:</p>
         <p id="path_info"></p>
+        <p>Haku (luku 0 - 100): </p><input id="search_text">
+        <button id="search_button" onClick="buttonClicked()">hae</button>
     </body>
 </html>
 
 <script>
+    var polylines = []
     var map = L.map('map').setView([61.4981, 23.7608], 13);
 
     const draw_route = async (line) => {
@@ -49,17 +52,31 @@
         console.log(calculated_path)
 
         // Draw data
-        var firstpolyline = new L.Polyline(calculated_path, {
+        var polyline = new L.Polyline(calculated_path, {
             color: 'blue',
             weight: 8,
             opacity: 0.6,
             smoothFactor: 1
         });
-        firstpolyline.addTo(map);
+        polyline.addTo(map);
+        polylines.push(polyline)
 
     }
     draw_route(15)
 
+    const delete_drawn_routes = () => {
+        polylines.forEach(function (item) {
+            map.removeLayer(item)
+        });
+    }
+
+    const buttonClicked = () => {
+        var text = document.getElementById("search_text").value
+        document.getElementById("search_text").value = ""
+        var number = parseInt(text)
+        delete_drawn_routes()
+        draw_route(number)
+    }
 
     function onMapClick(e) {
         console.log("You clicked the map at " + e.latlng);
