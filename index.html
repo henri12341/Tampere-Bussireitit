@@ -66,7 +66,7 @@
         // Draw route 0
         draw_route(0)
         // Make list of possible routes to search
-        var text = `<br><p>Lista linjoista</p><ol type="1">`
+        var text = `<br><p>Lista linjoista</p><ol type="1" start="0">`
         for (let i = 0; i < line_names.length; i++) {
             text += `<li>${line_names[i]} - ${line_urls[i]}</li>`
         }
