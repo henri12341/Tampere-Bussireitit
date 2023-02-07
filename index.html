@@ -12,22 +12,26 @@
     </head>
     <body>
         <div id="map"></div>
+        <p>Linjan tiedot:</p>
+        <p id="path_info"></p>
     </body>
 </html>
 
 <script>
     var map = L.map('map').setView([61.4981, 23.7608], 13);
 
-    const main = async () => {
+    const draw_route = async (line) => {
         var data = await getRouteData()
         console.log(data.body)
+        var line_name = data.body[line]["name"]
+        var line_url = data.body[line]["lineUrl"]
 
-        var route_to_draw = data.body[0]["geographicCoordinateProjection"]
-        console.log(route_to_draw)
+        // Set path info
+        document.getElementById("path_info").innerHTML = `Linja: ${line_name}<br>${line_url}`
 
+        // Split data in drawable data
+        var route_to_draw = data.body[line]["geographicCoordinateProjection"]
         var parts = route_to_draw.split(":")
-        console.log(parts)
-
         var calculated_path = []
         for (let i = 0; i < parts.length; i++) {
             let coords = parts[i].split(",")
@@ -41,20 +45,20 @@
                     let previous_coordinate = calculated_path[i-1]
                     calculated_path.push([previous_coordinate[0] - coords[0], previous_coordinate[1] - coords[1]])
             }
-            console.log(coords)
         }
         console.log(calculated_path)
 
+        // Draw data
         var firstpolyline = new L.Polyline(calculated_path, {
             color: 'blue',
             weight: 8,
-            opacity: 1,
+            opacity: 0.6,
             smoothFactor: 1
         });
         firstpolyline.addTo(map);
 
     }
-    main()
+    draw_route(15)
 
 
     function onMapClick(e) {
