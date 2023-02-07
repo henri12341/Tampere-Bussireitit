@@ -8,14 +8,61 @@
         integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
         crossorigin=""></script>
         <link rel="stylesheet" href="style.css">
+        <script src="api.js"></script>
     </head>
     <body>
-         <div id="map"></div>
+        <div id="map"></div>
     </body>
 </html>
 
 <script>
     var map = L.map('map').setView([61.4981, 23.7608], 13);
+
+    const main = async () => {
+        var data = await getRouteData()
+        console.log(data.body)
+
+        var route_to_draw = data.body[0]["geographicCoordinateProjection"]
+        console.log(route_to_draw)
+
+        var parts = route_to_draw.split(":")
+        console.log(parts)
+
+        var calculated_path = []
+        for (let i = 0; i < parts.length; i++) {
+            let coords = parts[i].split(",")
+            coords[0] = parseFloat(coords[0] ) / 100000
+            coords[1] = parseFloat(coords[1] ) / 100000
+            if (i === 0)
+                {
+                    calculated_path.push([coords[0], coords[1]])
+                }
+            else {
+                    let previous_coordinate = calculated_path[i-1]
+                    calculated_path.push([previous_coordinate[0] - coords[0], previous_coordinate[1] - coords[1]])
+            }
+            console.log(coords)
+        }
+        console.log(calculated_path)
+
+        for (let i = 0; i < calculated_path.length; i++) {
+            let pathmark = calculated_path[i]
+
+            L.marker(pathmark).addTo(map)
+                .openPopup();
+        }
+
+    }
+    main()
+
+    L.marker([61.50903, 23.75954]).addTo(map)
+        .openPopup();
+
+    function onMapClick(e) {
+        console.log("You clicked the map at " + e.latlng);
+    }
+    map.on('click', onMapClick);
+
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
