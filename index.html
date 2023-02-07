@@ -14,55 +14,71 @@
         <div id="map"></div>
         <p>Linjan tiedot:</p>
         <p id="path_info"></p>
-        <p>Haku (luku 0 - 100): </p><input id="search_text">
+        <p>Haku (luku 0 - 99): </p><input id="search_text">
         <button id="search_button" onClick="buttonClicked()">hae</button>
+        <div id="line_list"></div>
     </body>
 </html>
 
 <script>
     var polylines = []
+    var line_names = []
+    var line_urls = []
     var map = L.map('map').setView([61.4981, 23.7608], 13);
 
-    const draw_route = async (line) => {
+    const get_routes = async () => {
         var data = await getRouteData()
-        console.log(data.body)
-        var line_name = data.body[line]["name"]
-        var line_url = data.body[line]["lineUrl"]
+        for (let i = 0; i < data.body.length; i++) {
 
-        // Set path info
-        document.getElementById("path_info").innerHTML = `Linja: ${line_name}<br>${line_url}`
+            // Set path info
+            var line_name = data.body[i]["name"]
+            var line_url = data.body[i]["lineUrl"]
+            line_names.push(line_name)
+            line_urls.push(line_url)
 
-        // Split data in drawable data
-        var route_to_draw = data.body[line]["geographicCoordinateProjection"]
-        var parts = route_to_draw.split(":")
-        var calculated_path = []
-        for (let i = 0; i < parts.length; i++) {
-            let coords = parts[i].split(",")
-            coords[0] = parseFloat(coords[0] ) / 100000
-            coords[1] = parseFloat(coords[1] ) / 100000
-            if (i === 0)
-                {
-                    calculated_path.push([coords[0], coords[1]])
+            // Split data in drawable data
+            var route_to_draw = data.body[i]["geographicCoordinateProjection"]
+            var parts = route_to_draw.split(":")
+            var calculated_path = []
+            for (let i = 0; i < parts.length; i++) {
+                let coords = parts[i].split(",")
+                coords[0] = parseFloat(coords[0] ) / 100000
+                coords[1] = parseFloat(coords[1] ) / 100000
+                if (i === 0)
+                    {
+                        calculated_path.push([coords[0], coords[1]])
+                    }
+                else {
+                        let previous_coordinate = calculated_path[i-1]
+                        calculated_path.push([previous_coordinate[0] - coords[0], previous_coordinate[1] - coords[1]])
                 }
-            else {
-                    let previous_coordinate = calculated_path[i-1]
-                    calculated_path.push([previous_coordinate[0] - coords[0], previous_coordinate[1] - coords[1]])
             }
+
+            // Draw data
+            var polyline = new L.Polyline(calculated_path, {
+                color: 'blue',
+                weight: 8,
+                opacity: 0.6,
+                smoothFactor: 1
+            });
+            polylines.push(polyline)
         }
-        console.log(calculated_path)
-
-        // Draw data
-        var polyline = new L.Polyline(calculated_path, {
-            color: 'blue',
-            weight: 8,
-            opacity: 0.6,
-            smoothFactor: 1
-        });
-        polyline.addTo(map);
-        polylines.push(polyline)
-
+        // Draw route 0
+        draw_route(0)
+        // Make list of possible routes to search
+        var text = `<br><p>Lista linjoista</p><ol type="1">`
+        for (let i = 0; i < line_names.length; i++) {
+            text += `<li>${line_names[i]} - ${line_urls[i]}</li>`
+        }
+        text += `</ol>`
+        document.getElementById("line_list").innerHTML = `${text}`
     }
-    draw_route(15)
+    get_routes()
+
+    const draw_route = (route_number) => {
+        polylines[route_number].addTo(map);
+        document.getElementById("path_info").innerHTML = `Linja: ${line_names[route_number]}<br>${line_urls[route_number]}`
+    }
 
     const delete_drawn_routes = () => {
         polylines.forEach(function (item) {
